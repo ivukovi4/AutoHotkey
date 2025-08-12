@@ -45,6 +45,7 @@ SC178 & Right::
     }
 }
 
+; macos like ctrl + backspace behavior
 #HotIf GetKeyState("Ctrl")
 {
     SC178 & BackSpace:: {
