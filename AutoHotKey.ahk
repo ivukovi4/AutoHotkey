@@ -1,92 +1,65 @@
 ﻿#Requires AutoHotkey v2.0
-
 #SingleInstance Force
 
-SC178 & Up::
-{
-    Send "{PgUp}"
-}
+; Optional: make synthetic keys snappier
+SetKeyDelay(0, 10)  ; press delay 0 ms, release delay 10 ms
 
-SC178 & Down::
-{
-    Send "{PgDn}"
-}
+; ─────────────────────────────────────────
+; SC178 as navigation modifier
+; ─────────────────────────────────────────
 
-SC178 & Left::
-{
-    Send "{Home}"
-}
-
-SC178 & Right::
-{
-    Send "{End}"
-}
-
-#HotIf GetKeyState("Shift")
-{
-    SC178 & Up::
-    {
-        Send "{Shift Down}{PgUp}{Shift Up}"
-    }
-
-    SC178 & Down::
-    {
-        Send "{Shift Down}{PgDn}{Shift Up}"
-    }
-
-    SC178 & Left::
-    {
-        Send "{Shift Down}{Home}{Shift Up}"
-    }
-
-    SC178 & Right::
-    {
-        Send "{Shift Down}{End}{Shift Up}"
-    }
-}
-
-; macos like ctrl + backspace behavior
-#HotIf GetKeyState("Ctrl")
-{
-    SC178 & BackSpace:: {
-        SendInput "+{End}"
-        SendInput "{Delete}"
-    }
-
-    ^BackSpace:: {
-        SendInput "+{Home}"
-
-        if (WinActive('ahk_exe Code.exe') || WinActive('ahk_exe rider64.exe')) {
-            ; Most IDE not selecting tabs by default
-            SendInput "+{Home}"
-        }
-
-        SendInput "{Backspace}"
-    }
-}
-
+; No modifiers
+#HotIf !GetKeyState("Shift", "P")
+SC178 & Up:: SendInput("{PgUp}")
+SC178 & Down:: SendInput("{PgDn}")
+SC178 & Left:: SendInput("{Home}")
+SC178 & Right:: SendInput("{End}")
 #HotIf
-{
-    SC178 & BackSpace::
-    {
-        Send "{Delete}"
-    }
+
+; With physical Shift held → select while moving
+#HotIf GetKeyState("Shift", "P")
+SC178 & Up:: SendInput("+{PgUp}")   ; Shift+PgUp
+SC178 & Down:: SendInput("+{PgDn}")   ; Shift+PgDn
+SC178 & Left:: SendInput("+{Home}")   ; Shift+Home
+SC178 & Right:: SendInput("+{End}")    ; Shift+End
+#HotIf
+
+; ─────────────────────────────────────────
+; macOS-like Ctrl + Backspace behavior
+; ─────────────────────────────────────────
+
+#HotIf GetKeyState("Ctrl", "P")
+SC178 & BackSpace:: {
+    ; Delete to end of line
+    SendInput("+{End}")
+    SendInput("{Delete}")
 }
+
+^BackSpace:: {
+    ; Select to beginning
+    SendInput("+{Home}")
+
+    if (WinActive("ahk_exe Code.exe") || WinActive("ahk_exe rider64.exe")) {
+        ; Some IDEs need this twice
+        SendInput("+{Home}")
+    }
+
+    SendInput("{Backspace}")
+}
+#HotIf
+
+; Default SC178 + Backspace → Delete
+#HotIf
+SC178 & BackSpace:: SendInput("{Delete}")
+
+; ─────────────────────────────────────────
+; Alt word navigation / deletion
+; ─────────────────────────────────────────
 
 Alt & BackSpace:: {
-    SendInput "+^{Left}"
-    SendInput "{Backspace}"
+    SendInput("+^{Left}")   ; select previous word
+    SendInput("{Backspace}")
 }
 
-Alt & Left:: Send("^{Left}")
-
-Alt & Right:: Send("^{Right}")
-
-; GetSelectedText() {
-;     clipSaved := ClipboardAll()
-;     SendEvent "^c"
-;     ClipWait(0.2)
-;     selectedText := A_Clipboard
-;     A_Clipboard := clipSaved
-;     return selectedText
-; }
+Alt & Left:: SendInput("^{Left}")
+Alt & Right:: SendInput("^{Right}")
